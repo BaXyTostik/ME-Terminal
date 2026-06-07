@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+frontend/node_modules/
+frontend/.next/
+
+# Textures (large binary assets - download separately)
+static/textures/renders/
+static/textures/faithful/
+static/textures/jar/
+static/textures/prismarine/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Region data (user-specific)
+region/
+
+# Temp
+*.log

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="mc">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ME Terminal</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===== ТЕМА MC ===== */
+[data-theme="mc"] {
+  --page-bg:     #2b2b2b;
+  --gui-bg:      #c6c6c6;
+  --gui-border1: #ffffff;
+  --gui-border2: #555555;
+  --gui-shadow:  3px 3px 0 rgba(0,0,0,.5);
+  --panel-bg:    #8b8b8b;
+  --panel-b1:    #3f3f3f;
+  --panel-b2:    #ffffff;
+  --slot-bg:     #8b8b8b;
+  --slot-b1:     #373737;
+  --slot-b2:     #ffffff;
+  --slot-hover:  #9e9e9e;
+  --slot-size:   90px;
+  --icon-size:   72px;
+  --qty-color:   #ffffff;
+  --qty-shadow:  1px 1px 0 #3f3f3f;
+  --qty-size:    13px;
+  --text:        #404040;
+  --text-light:  #ffffff;
+  --search-bg:   #ffffff;
+  --search-bc:   #373737;
+  --search-bc2:  #ffffff;
+  --btn-bg:      #c6c6c6;
+  --btn-b1:      #ffffff;
+  --btn-b2:      #555555;
+  --status-text: #404040;
+  --tt-bg:       #100010;
+  --tt-border:   #2c0a52;
+  --tt-outer:    #160024;
+  --tt-name:     #ffffff;
+  --tt-id:       #aaaaaa;
+  --tt-val:      #55ff55;
+  --tt-dim:      #777777;
+  --radius:      0px;
+  --gap:         2px;
+  --page-pad:    16px;
+}
+
+/* ===== ТЕМА MODERN ===== */
+[data-theme="modern"] {
+  --page-bg:     #0f0f17;
+  --gui-bg:      #1c1c2e;
+  --gui-border1: #35355a;
+  --gui-border2: #35355a;
+  --gui-shadow:  0 8px 32px rgba(0,0,0,.7);
+  --panel-bg:    #13131f;
+  --panel-b1:    #25254a;
+  --panel-b2:    #25254a;
+  --slot-bg:     #252538;
+  --slot-b1:     #35355a;
+  --slot-b2:     #35355a;
+  --slot-hover:  #2e2e4a;
+  --slot-size:   90px;
+  --icon-size:   70px;
+  --qty-color:   #4ade80;
+  --qty-shadow:  0 0 6px rgba(74,222,128,.5);
+  --qty-size:    12px;
+  --text:        #c0c0e0;
+  --text-light:  #e0e0ff;
+  --search-bg:   #13131f;
+  --search-bc:   #35355a;
+  --search-bc2:  #7c3aed;
+  --btn-bg:      #252538;
+  --btn-b1:      #35355a;
+  --btn-b2:      #35355a;
+  --status-text: #8080aa;
+  --tt-bg:       #1a1a2e;
+  --tt-border:   #7c3aed;
+  --tt-outer:    #5b21b6;
+  --tt-name:     #e0e0ff;
+  --tt-id:       #8080aa;
+  --tt-val:      #4ade80;
+  --tt-dim:      #555577;
+  --radius:      8px;
+  --gap:         4px;
+  --page-pad:    20px;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text-light);
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  padding: var(--page-pad);
+  transition: background .2s;
+}
+
+.gui {
+  background: var(--gui-bg);
+  border: 3px solid;
+  border-color: var(--gui-border1) var(--gui-border2) var(--gui-border2) var(--gui-border1);
+  box-shadow: var(--gui-shadow);
+  border-radius: var(--radius);
+  padding: 10px;
+  width: 100%;
+}
+
+/* ===== ШАПКА ===== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+}
+.title { font-size: 16px; font-weight: 700; color: var(--text); }
+[data-theme="modern"] .title { color: var(--text-light); font-size: 18px; letter-spacing: .5px; }
+
+.theme-switcher { display: flex; gap: 4px; }
+.theme-btn {
+  padding: 4px 12px; font-size: 12px; cursor: pointer;
+  background: var(--btn-bg); color: var(--text);
+  border: 2px solid; border-radius: var(--radius);
+  border-color: var(--btn-b1) var(--btn-b2) var(--btn-b2) var(--btn-b1);
+}
+[data-theme="modern"] .theme-btn { color: var(--text-light); }
+.theme-btn.active {
+  border-color: var(--btn-b2) var(--btn-b1) var(--btn-b1) var(--btn-b2);
+  background: var(--slot-bg);
+}
+[data-theme="modern"] .theme-btn.active { border-color: #7c3aed; box-shadow: 0 0 8px #7c3aed66; }
+
+.meta {
+  font-size: 11px; color: var(--status-text);
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+}
+.dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: #2e7d32; margin-right: 4px;
+  box-shadow: 0 0 4px #2e7d32;
+}
+.dot.stale { background: #ef6c00; box-shadow: 0 0 4px #ef6c00; }
+.dot.err   { background: #c62828; box-shadow: 0 0 4px #c62828; }
+
+/* ===== ТУЛБАР ===== */
+.toolbar {
+  display: flex; gap: 6px; align-items: center; margin-bottom: 8px;
+}
+.search-wrap {
+  flex: 1;
+  background: var(--search-bg);
+  border: 2px solid;
+  border-color: var(--search-bc) var(--search-bc2) var(--search-bc2) var(--search-bc);
+  border-radius: var(--radius);
+  display: flex; align-items: center; padding: 0 8px;
+}
+[data-theme="modern"] .search-wrap:focus-within {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px #7c3aed44;
+}
+.search-wrap input {
+  width: 100%; border: none; outline: none; background: transparent;
+  color: var(--text-light); font-size: 14px; padding: 7px 4px;
+}
+[data-theme="mc"] .search-wrap input { color: #222; }
+.search-wrap::before { content: '🔍'; opacity: .5; font-size: 13px; }
+
+.sort-btn {
+  padding: 7px 12px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  background: var(--btn-bg); color: var(--text);
+  border: 2px solid; border-radius: var(--radius);
+  border-color: var(--btn-b1) var(--btn-b2) var(--btn-b2) var(--btn-b1);
+}
+[data-theme="modern"] .sort-btn { color: var(--text-light); }
+.sort-btn:active {
+  border-color: var(--btn-b2) var(--btn-b1) var(--btn-b1) var(--btn-b2);
+}
+
+/* ===== СКЛАДЫ ===== */
+.wh-bar {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.wh-btn {
+  padding: 5px 14px; font-size: 12px; cursor: pointer;
+  background: var(--btn-bg); color: var(--text);
+  border: 2px solid; border-radius: var(--radius);
+  border-color: var(--btn-b1) var(--btn-b2) var(--btn-b2) var(--btn-b1);
+  white-space: nowrap; transition: background .1s;
+}
+[data-theme="modern"] .wh-btn { color: var(--text-light); }
+.wh-btn.active {
+  border-color: var(--btn-b2) var(--btn-b1) var(--btn-b1) var(--btn-b2);
+  background: var(--slot-bg);
+}
+[data-theme="modern"] .wh-btn.active {
+  border-color: #7c3aed; box-shadow: 0 0 8px #7c3aed55;
+  background: #252540;
+}
+.wh-btn .wh-count {
+  opacity: .65; font-size: 10px; margin-left: 4px;
+}
+
+/* ===== СЕТКА ===== */
+.grid-area {
+  background: var(--panel-bg);
+  border: 2px solid;
+  border-color: var(--panel-b1) var(--panel-b2) var(--panel-b2) var(--panel-b1);
+  border-radius: var(--radius);
+  padding: 6px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--slot-size), 1fr));
+  gap: var(--gap);
+  max-height: 78vh; overflow-y: auto;
+  padding-right: 2px;
+}
+.slot {
+  width: 100%; aspect-ratio: 1;
+  position: relative; cursor: default;
+  background: var(--slot-bg);
+  border: 2px solid;
+  border-color: var(--slot-b1) var(--slot-b2) var(--slot-b2) var(--slot-b1);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .1s;
+}
+.slot:hover { background: var(--slot-hover); }
+[data-theme="modern"] .slot:hover { box-shadow: 0 0 10px #7c3aed44; }
+
+.slot img {
+  width: 80%; height: 80%;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+  display: block; object-fit: contain;
+}
+.slot .ph {
+  width: 75%; height: 75%;
+  font-size: 9px; color: var(--text); display: flex;
+  align-items: center; justify-content: center;
+  text-align: center; word-break: break-word; line-height: 1.2;
+  background: rgba(0,0,0,.1); border-radius: 2px;
+}
+.slot .qty {
+  position: absolute; right: 2px; bottom: 0;
+  font-size: var(--qty-size); font-weight: 700;
+  color: var(--qty-color);
+  text-shadow: var(--qty-shadow);
+  pointer-events: none; line-height: 1.1;
+}
+
+/* ===== СТАТУС ===== */
+.statusbar {
+  font-size: 11px; color: var(--status-text);
+  padding: 7px 2px 2px;
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.statusbar b { color: var(--tt-val); }
+
+/* ===== ТУЛТИП ===== */
+#tooltip {
+  position: fixed; z-index: 999; pointer-events: none; display: none;
+  background: var(--tt-bg);
+  border: 2px solid var(--tt-border);
+  box-shadow: 0 0 0 1px var(--tt-outer);
+  padding: 7px 10px; max-width: 260px;
+  border-radius: var(--radius);
+}
+.tt-name { color: var(--tt-name); font-size: 14px; font-weight: 600; }
+.tt-id   { color: var(--tt-id);   font-size: 11px; margin-top: 2px; }
+.tt-row  { color: #aaaaaa;         font-size: 12px; margin-top: 4px; }
+.tt-row b { color: var(--tt-val); }
+.tt-dim  { color: var(--tt-dim);   font-size: 10px; margin-top: 4px; }
+
+.empty { grid-column: 1/-1; text-align: center; padding: 50px; color: var(--status-text); }
+
+.grid::-webkit-scrollbar { width: 10px; }
+.grid::-webkit-scrollbar-track { background: var(--panel-bg); }
+.grid::-webkit-scrollbar-thumb {
+  background: var(--slot-bg);
+  border: 2px solid var(--panel-bg);
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+<div class="gui">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="title">ME Terminal</span>
+      <div class="theme-switcher">
+        <button class="theme-btn active" data-t="mc">MC Terminal</button>
+        <button class="theme-btn" data-t="modern">Современный</button>
+      </div>
+    </div>
+    <div class="meta">
+      <span><span class="dot" id="dot"></span><span id="status">…</span></span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Поиск предмета..." autocomplete="off">
+    </div>
+    <button class="sort-btn" id="sortbtn">Кол-во ▼</button>
+  </div>
+
+  <div class="wh-bar" id="wh-bar">
+    <!-- Кнопки складов генерируются JS -->
+  </div>
+
+  <div class="grid-area">
+    <div class="grid" id="grid">
+      <div class="empty">Загрузка…</div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span>Предметов: <b id="s-unique">0</b></span>
+    <span>Всего: <b id="s-total">0</b></span>
+    <span id="s-file"></span>
+  </div>
+</div>
+<div id="tooltip"></div>
+<script>
+"use strict";
+const state = {
+  items: [], filtered: [], search: "",
+  sortKey: "count", sortDir: -1,
+  interval: 15, lastData: 0, generatedAt: "",
+  warehouses: [], activeWh: "__all__",
+};
+const $ = id => document.getElementById(id);
+
+function fmtQty(n) {
+  if (n < 1000) return String(n);
+  if (n < 1000000) { const k = n/1000; return (k<10?k.toFixed(1):Math.round(k))+"K"; }
+  const m = n/1000000; return (m<10?m.toFixed(1):Math.round(m))+"M";
+}
+function fmtFull(n) { return n.toLocaleString("ru-RU"); }
+function fmtDate(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ===== ТЕМА ===== */
+const THEME_KEY = "ct_theme";
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  document.querySelectorAll(".theme-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.t === t);
+  });
+  localStorage.setItem(THEME_KEY, t);
+}
+document.querySelectorAll(".theme-btn").forEach(btn => {
+  btn.addEventListener("click", () => applyTheme(btn.dataset.t));
+});
+applyTheme(localStorage.getItem(THEME_KEY) || "mc");
+
+/* ===== API ===== */
+async function loadConfig() {
+  try {
+    const cfg = await (await fetch("/api/config")).json();
+    state.interval = cfg.refresh_interval || 15;
+  } catch(e) { console.error(e); }
+}
+
+function renderWhBar() {
+  const bar = $("wh-bar");
+  bar.innerHTML = state.warehouses.map(wh => {
+    const active = wh.id === state.activeWh ? " active" : "";
+    const cnt = fmtQty(wh.total_count);
+    return `<button class="wh-btn${active}" data-wh="${esc(wh.id)}">
+      ${esc(wh.name)}<span class="wh-count">${cnt}</span>
+    </button>`;
+  }).join("");
+  bar.querySelectorAll(".wh-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.activeWh = btn.dataset.wh;
+      loadItems();
+    });
+  });
+}
+
+function setStatus(cls, text) {
+  $("dot").className = "dot" + (cls==="ok" ? "" : " "+cls);
+  $("status").textContent = text;
+}
+
+async function loadWarehouses() {
+  try {
+    const data = await (await fetch("/api/warehouses")).json();
+    if (data.error) return;
+    state.warehouses = data.warehouses || [];
+    state.generatedAt = data.generated_at || "";
+    $("s-file").textContent = data.generated_at
+      ? "Данные от: " + fmtDate(data.generated_at) : "";
+    renderWhBar();
+  } catch(e) { console.error(e); }
+}
+
+async function loadItems() {
+  try {
+    const url = "/api/items?wh=" + encodeURIComponent(state.activeWh);
+    const data = await (await fetch(url)).json();
+    if (data.error) {
+      setStatus("err","Ошибка");
+      $("grid").innerHTML = `<div class="empty">⚠ ${esc(data.error)}</div>`;
+      return;
+    }
+    state.items = data.items || [];
+    state.generatedAt = data.generated_at || "";
+    state.lastData = Date.now();
+    const st = data.stats || {};
+    $("s-unique").textContent = fmtFull(st.unique_items||0);
+    $("s-total").textContent  = fmtFull(st.total_count||0);
+    setStatus("ok", esc(data.warehouse_name||""));
+    // Обновляем активную кнопку
+    document.querySelectorAll(".wh-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.wh === state.activeWh);
+    });
+    applyFilterSort();
+  } catch(e) {
+    console.error(e);
+    setStatus("err","Сервер недоступен");
+  }
+}
+
+function applyFilterSort() {
+  const q = state.search.toLowerCase();
+  let list = state.items;
+  if (q) list = list.filter(it =>
+    it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q));
+  const k = state.sortKey, d = state.sortDir;
+  list = list.slice().sort((a,b) => {
+    const va=a[k], vb=b[k];
+    return typeof va==="string" ? va.localeCompare(vb)*d : (va-vb)*d;
+  });
+  state.filtered = list;
+  render();
+}
+
+function iconUrl(icon) {
+  if (!icon) return null;
+  // icon = "renders/name.webp" или "faithful/item/name" или "jar/item/name"
+  if (icon.endsWith('.webp')) return "/textures/" + icon;
+  return "/textures/" + icon + ".png";
+}
+
+function render() {
+  const grid = $("grid");
+  if (!state.filtered.length) {
+    grid.innerHTML = `<div class="empty">Ничего не найдено</div>`;
+    return;
+  }
+  grid.innerHTML = state.filtered.map((it, i) => {
+    const url = iconUrl(it.icon);
+    const img = url
+      ? `<img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : "";
+    const ph = `<div class="ph" style="${url?'display:none':''}">
+      ${esc(it.name.split(' ').slice(0,2).join(' '))}</div>`;
+    return `<div class="slot" data-i="${i}">${img}${ph}<span class="qty">${fmtQty(it.count)}</span></div>`;
+  }).join("");
+}
+
+/* ===== ТУЛТИП ===== */
+const tt = $("tooltip");
+function showTt(it, x, y) {
+  const shulk = it.full_shulkers > 0
+    ? `<div class="tt-row">Шалкеров: <b>${it.full_shulkers}</b></div>` : "";
+  const gen = state.generatedAt
+    ? `<div class="tt-dim">Данные от: ${fmtDate(state.generatedAt)}</div>` : "";
+  tt.innerHTML =
+    `<div class="tt-name">${esc(it.name)}</div>` +
+    `<div class="tt-id">${esc(it.id)}</div>` +
+    `<div class="tt-row">Количество: <b>${fmtFull(it.count)}</b></div>` +
+    shulk + gen;
+  tt.style.display = "block";
+  moveTt(x, y);
+}
+function moveTt(x, y) {
+  tt.style.left="0"; tt.style.top="0";
+  const pad=14, r=tt.getBoundingClientRect();
+  let tx=x+pad, ty=y+pad;
+  if (tx+r.width  > window.innerWidth)  tx = x-r.width-pad;
+  if (ty+r.height > window.innerHeight) ty = y-r.height-pad;
+  tt.style.left=tx+"px"; tt.style.top=ty+"px";
+}
+$("grid").addEventListener("mouseover", e => {
+  const s = e.target.closest(".slot");
+  if (s) { const it=state.filtered[+s.dataset.i]; if(it) showTt(it,e.clientX,e.clientY); }
+});
+$("grid").addEventListener("mousemove", e => {
+  if (tt.style.display==="block") moveTt(e.clientX,e.clientY);
+});
+$("grid").addEventListener("mouseout", e => {
+  if (!e.relatedTarget?.closest?.(".slot")) tt.style.display="none";
+});
+
+/* ===== ПОИСК И СОРТИРОВКА ===== */
+$("search").addEventListener("input", e => { state.search=e.target.value; applyFilterSort(); });
+
+const SORTS = [
+  {key:"count",dir:-1,label:"Кол-во ▼"},
+  {key:"count",dir:1, label:"Кол-во ▲"},
+  {key:"name", dir:1, label:"Имя А-Я"},
+  {key:"name", dir:-1,label:"Имя Я-А"},
+];
+let sortIdx=0;
+$("sortbtn").addEventListener("click", () => {
+  sortIdx=(sortIdx+1)%SORTS.length;
+  const s=SORTS[sortIdx];
+  state.sortKey=s.key; state.sortDir=s.dir;
+  $("sortbtn").textContent=s.label;
+  applyFilterSort();
+});
+
+/* ===== ЗАПУСК ===== */
+(async function init() {
+  await loadConfig();
+  await loadWarehouses();
+  await loadItems();
+  setInterval(async () => {
+    await loadWarehouses();
+    await loadItems();
+  }, state.interval * 1000);
+  setInterval(() => {
+    if (!state.lastData || $("dot").classList.contains("err")) return;
+    const sec = Math.round((Date.now()-state.lastData)/1000);
+    if (sec > state.interval + 5) setStatus("stale", sec+" сек назад");
+  }, 1000);
+})();
+</script>
+</body>
+</html>
