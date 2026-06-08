@@ -40,8 +40,7 @@ const Slot = memo(function Slot({
           alt=""
           loading="lazy"
           decoding="async"
-          className="w-[70%] h-[70%] object-contain"
-          style={{ imageRendering: "pixelated" }}
+          className="w-[70%] h-[70%] object-contain pixelated"
         />
       ) : (
         <span className="text-[9px] text-center text-[var(--muted-foreground)] leading-tight px-1">

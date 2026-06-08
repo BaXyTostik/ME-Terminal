@@ -84,6 +84,11 @@
     background: rgba(139, 92, 246, 0.1);
     border-color: rgba(139, 92, 246, 0.3);
   }
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
   }
