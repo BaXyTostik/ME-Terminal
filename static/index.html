@@ -300,7 +300,8 @@ body {
 
   <div class="toolbar">
     <div class="search-wrap">
-      <input type="text" id="search" placeholder="Поиск предмета..." autocomplete="off">
+      <input type="text" id="search" placeholder="Поиск предмета (рус/eng)..." autocomplete="off">
+      <span id="search-clear" style="cursor:pointer;font-size:16px;opacity:0;padding:0 4px;transition:opacity .15s">&times;</span>
     </div>
     <button class="sort-btn" id="sortbtn">Кол-во ▼</button>
   </div>
@@ -529,10 +530,19 @@ $("grid").addEventListener("mouseleave", () => { tt.style.display="none"; });
 
 /* ===== ПОИСК И СОРТИРОВКА ===== */
 let _searchTimer = 0;
-$("search").addEventListener("input", e => {
+const searchInput = $("search");
+const searchClear = $("search-clear");
+searchInput.addEventListener("input", e => {
   state.search = e.target.value;
+  searchClear.style.opacity = state.search ? "0.6" : "0";
   clearTimeout(_searchTimer);
   _searchTimer = setTimeout(applyFilterSort, 120);
+});
+searchClear.addEventListener("click", () => {
+  searchInput.value = "";
+  state.search = "";
+  searchClear.style.opacity = "0";
+  applyFilterSort();
 });
 
 const SORTS = [
