@@ -213,6 +213,7 @@ body {
   gap: var(--gap);
   max-height: 78vh; overflow-y: auto;
   padding-right: 2px;
+  will-change: scroll-position;
 }
 .slot {
   width: 100%; aspect-ratio: 1;
@@ -222,7 +223,8 @@ body {
   border-color: var(--slot-b1) var(--slot-b2) var(--slot-b2) var(--slot-b1);
   border-radius: var(--radius);
   display: flex; align-items: center; justify-content: center;
-  transition: background .1s;
+  contain: layout style paint;
+  overflow: hidden;
 }
 .slot:hover { background: var(--slot-hover); }
 [data-theme="modern"] .slot:hover { box-shadow: 0 0 10px #7c3aed44; }
@@ -432,7 +434,9 @@ function applyFilterSort() {
   const q = state.search.toLowerCase();
   let list = state.items;
   if (q) list = list.filter(it =>
-    it.name.toLowerCase().includes(q) || it.id.toLowerCase().includes(q));
+    it.name.toLowerCase().includes(q) ||
+    (it.name_ru && it.name_ru.toLowerCase().includes(q)) ||
+    it.id.toLowerCase().includes(q));
   const k = state.sortKey, d = state.sortDir;
   list = list.slice().sort((a,b) => {
     const va=a[k], vb=b[k];
@@ -455,26 +459,48 @@ function render() {
     grid.innerHTML = `<div class="empty">Ничего не найдено</div>`;
     return;
   }
-  grid.innerHTML = state.filtered.map((it, i) => {
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < state.filtered.length; i++) {
+    const it = state.filtered[i];
+    const slot = document.createElement("div");
+    slot.className = "slot";
+    slot.dataset.i = String(i);
     const url = iconUrl(it.icon);
-    const img = url
-      ? `<img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-      : "";
-    const ph = `<div class="ph" style="${url?'display:none':''}">
-      ${esc(it.name.split(' ').slice(0,2).join(' '))}</div>`;
-    return `<div class="slot" data-i="${i}">${img}${ph}<span class="qty">${fmtQty(it.count)}</span></div>`;
-  }).join("");
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.onerror = function() { this.style.display='none'; this.nextElementSibling.style.display='flex'; };
+      slot.appendChild(img);
+    }
+    const ph = document.createElement("div");
+    ph.className = "ph";
+    ph.style.display = url ? "none" : "flex";
+    ph.textContent = (it.name_ru || it.name).split(' ').slice(0,2).join(' ');
+    slot.appendChild(ph);
+    const qty = document.createElement("span");
+    qty.className = "qty";
+    qty.textContent = fmtQty(it.count);
+    slot.appendChild(qty);
+    frag.appendChild(slot);
+  }
+  grid.innerHTML = "";
+  grid.appendChild(frag);
 }
 
 /* ===== ТУЛТИП ===== */
 const tt = $("tooltip");
 function showTt(it, x, y) {
+  const name = it.name_ru || it.name;
   const shulk = it.full_shulkers > 0
     ? `<div class="tt-row">Шалкеров: <b>${it.full_shulkers}</b></div>` : "";
   const gen = state.generatedAt
     ? `<div class="tt-dim">Данные от: ${fmtDate(state.generatedAt)}</div>` : "";
   tt.innerHTML =
-    `<div class="tt-name">${esc(it.name)}</div>` +
+    `<div class="tt-name">${esc(name)}</div>` +
+    (it.name_ru ? `<div class="tt-id">${esc(it.name)}</div>` : '') +
     `<div class="tt-id">${esc(it.id)}</div>` +
     `<div class="tt-row">Количество: <b>${fmtFull(it.count)}</b></div>` +
     shulk + gen;
@@ -482,26 +508,32 @@ function showTt(it, x, y) {
   moveTt(x, y);
 }
 function moveTt(x, y) {
-  tt.style.left="0"; tt.style.top="0";
-  const pad=14, r=tt.getBoundingClientRect();
+  const pad=14;
   let tx=x+pad, ty=y+pad;
-  if (tx+r.width  > window.innerWidth)  tx = x-r.width-pad;
-  if (ty+r.height > window.innerHeight) ty = y-r.height-pad;
+  if (tx+260 > window.innerWidth)  tx = x-260-pad;
+  if (ty+100 > window.innerHeight) ty = y-100-pad;
   tt.style.left=tx+"px"; tt.style.top=ty+"px";
 }
+let _ttRaf = 0;
 $("grid").addEventListener("mouseover", e => {
   const s = e.target.closest(".slot");
   if (s) { const it=state.filtered[+s.dataset.i]; if(it) showTt(it,e.clientX,e.clientY); }
 });
 $("grid").addEventListener("mousemove", e => {
-  if (tt.style.display==="block") moveTt(e.clientX,e.clientY);
+  if (tt.style.display==="block") {
+    if (_ttRaf) return;
+    _ttRaf = requestAnimationFrame(() => { moveTt(e.clientX,e.clientY); _ttRaf=0; });
+  }
 });
-$("grid").addEventListener("mouseout", e => {
-  if (!e.relatedTarget?.closest?.(".slot")) tt.style.display="none";
-});
+$("grid").addEventListener("mouseleave", () => { tt.style.display="none"; });
 
 /* ===== ПОИСК И СОРТИРОВКА ===== */
-$("search").addEventListener("input", e => { state.search=e.target.value; applyFilterSort(); });
+let _searchTimer = 0;
+$("search").addEventListener("input", e => {
+  state.search = e.target.value;
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(applyFilterSort, 120);
+});
 
 const SORTS = [
   {key:"count",dir:-1,label:"Кол-во ▼"},
